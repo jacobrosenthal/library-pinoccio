@@ -114,6 +114,15 @@ bool SleepHandler::sleepUntilMatch(bool interruptible) {
   }
 }
 
+void SleepHandler::sleepRadio() {
+  while (NWK_Busy()) {}
+  NWK_SleepReq();
+}
+
+void SleepHandler::wakeRadio() {
+  NWK_WakeupReq();
+}
+
 void SleepHandler::scheduleSleep(uint32_t ms) {
   uint32_t ticks = msToTicks(ms);
   // Make sure we cannot "miss" the compare match if a low timeout is

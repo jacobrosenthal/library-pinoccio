@@ -3,6 +3,7 @@
 
 #include "backpack-bus/Pbbe.h"
 #include "util/Duration.h"
+#include "lwm/nwk/nwk.h"
 
 ISR(SCNT_OVFL_vect);
 
@@ -18,6 +19,8 @@ class SleepHandler {
     // ms can not be 0, or more than 2^32 * 16 / 1000 ms (±19 hours), due to
     // the limited range of the counter used.
     static void scheduleSleep(uint32_t ms);
+    static void sleepRadio();
+    static void wakeRadio();
 
     // How many ticks are left before the end time is reached?
     static uint32_t scheduledTicksLeft();

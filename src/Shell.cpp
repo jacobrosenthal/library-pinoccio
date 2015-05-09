@@ -277,6 +277,18 @@ static void appendTime(StringBuffer &b, Duration d) {
                   days, hours, minutes, seconds, d.us);
 }
 
+static numvar powerSleepRadio(void) {
+
+  SleepHandler::sleepRadio();
+  return 1;
+}
+
+static numvar powerWakeRadio(void) {
+
+  SleepHandler::wakeRadio();
+  return 1;
+}
+
 static numvar uptimeStatus(void) {
   StringBuffer out(100);
   out = F("Total: ");
@@ -2396,6 +2408,8 @@ void PinoccioShell::setup() {
   addFunction("power.sleep", powerSleep);
   addFunction("power.report", powerReport);
   addFunction("power.wakeup.pin", powerWakeupPin);
+  addFunction("power.sleepradio", powerSleepRadio);
+  addFunction("power.wakeradio", powerWakeRadio);
 
   addFunction("mesh.config", meshConfig);
   addFunction("mesh.setchannel", meshSetChannel);
