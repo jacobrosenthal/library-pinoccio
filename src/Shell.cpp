@@ -477,6 +477,16 @@ static numvar powerWakeupPin(void) {
   return 1;
 }
 
+static numvar powerPauseRadio(void) {
+  SleepHandler::pauseRadio();
+  return 1;
+}
+
+static numvar powerResumeRadio(void) {
+  SleepHandler::resumeRadio();
+  return 1;
+}
+
 /****************************\
 *      RGB LED HANDLERS     *
 \****************************/
@@ -2396,6 +2406,8 @@ void PinoccioShell::setup() {
   addFunction("power.sleep", powerSleep);
   addFunction("power.report", powerReport);
   addFunction("power.wakeup.pin", powerWakeupPin);
+  addFunction("power.pauseradio", powerPauseRadio);
+  addFunction("power.resumeradio", powerResumeRadio);
 
   addFunction("mesh.config", meshConfig);
   addFunction("mesh.setchannel", meshSetChannel);

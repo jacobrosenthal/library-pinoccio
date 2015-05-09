@@ -10,6 +10,9 @@ class SleepHandler {
   public:
     static void setup();
 
+    static void pauseRadio();
+    static void resumeRadio();
+
     // Schedule a sleep until the given number of ms from now. The sleep
     // actually starts when doSleep is called, but any delay between
     // scheduleSleep and doSleep does not affect the end time of the

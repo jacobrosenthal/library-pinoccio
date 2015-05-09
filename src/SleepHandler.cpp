@@ -147,6 +147,14 @@ uint32_t SleepHandler::scheduledTicksLeft() {
   return left;
 }
 
+void SleepHandler::pauseRadio() {
+  NWK_PauseReq();
+}
+
+void SleepHandler::resumeRadio() {
+  NWK_ResumeReq();
+}
+
 void SleepHandler::doSleep(bool interruptible) {
   // Disable Analag comparator
   uint8_t acsr = ACSR;
