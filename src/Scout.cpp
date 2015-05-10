@@ -20,6 +20,7 @@ using namespace pinoccio;
 static void scoutDigitalStateChangeTimerHandler(SYS_Timer_t *timer);
 static void scoutAnalogStateChangeTimerHandler(SYS_Timer_t *timer);
 static void scoutPeripheralStateChangeTimerHandler(SYS_Timer_t *timer);
+static void scheduleSleepTimerHandler(SYS_Timer_t *timer);
 
 #ifndef lengthof
 #define lengthof(x) (sizeof(x)/sizeof(*x))
@@ -70,6 +71,7 @@ static struct PinInfo {
 PinoccioScout Scout;
 
 PinoccioScout::PinoccioScout() {
+
   digitalPinEventHandler = 0;
   analogPinEventHandler = 0;
   batteryPercentageEventHandler = 0;
@@ -89,10 +91,15 @@ PinoccioScout::PinoccioScout() {
   peripheralStateChangeTimer.mode = SYS_TIMER_PERIODIC_MODE;
   peripheralStateChangeTimer.handler = scoutPeripheralStateChangeTimerHandler;
 
+  scheduleSleepTimer.interval = 100;
+  scheduleSleepTimer.mode = SYS_TIMER_INTERVAL_MODE;
+  scheduleSleepTimer.handler = scheduleSleepTimerHandler;
+
   eventVerboseOutput = false;
   isFactoryResetReady = false;
 
   sleepPending = false;
+  automatedSleep = false;
   postSleepFunction = NULL;
 }
 
@@ -193,8 +200,13 @@ void PinoccioScout::loop() {
 
     // if remaining <= 0, we won't actually sleep anymore, but still
     // call doSleep to run the callback and clean up
-    if (SleepHandler::scheduledTicksLeft() == 0)
+    if (SleepHandler::scheduledTicksLeft() == 0){
       doSleep(true);
+      // set a sys timer for wakeperiod to put us back to sleep
+      if(automatedSleep){
+        startScheduleSleepTimer();
+      }
+    }
     else if (canSleep)
       doSleep(false);
   }
@@ -300,6 +312,14 @@ void PinoccioScout::startPeripheralStateChangeEvents() {
 
 void PinoccioScout::stopPeripheralStateChangeEvents() {
   SYS_TimerStop(&peripheralStateChangeTimer);
+}
+
+void PinoccioScout::startScheduleSleepTimer() {
+  SYS_TimerStart(&scheduleSleepTimer);
+}
+
+void PinoccioScout::stopScheduleSleepTimer() {
+  SYS_TimerStop(&scheduleSleepTimer);
 }
 
 void PinoccioScout::setStateChangeEventCycle(uint32_t digitalInterval, uint32_t analogInterval, uint32_t peripheralInterval) {
@@ -642,6 +662,18 @@ static void scoutPeripheralStateChangeTimerHandler(SYS_Timer_t *timer) {
   }
 }
 
+static void scheduleSleepTimerHandler(SYS_Timer_t *timer) {
+  Scout.scheduleSleep2();
+}
+
+void PinoccioScout::setWakeMs(uint32_t wakePeriodMs) {
+  scheduleSleepTimer.interval = wakePeriodMs;
+}
+
+uint32_t PinoccioScout::getWakeMs() {
+  return scheduleSleepTimer.interval;
+}
+
 void PinoccioScout::scheduleSleep(uint32_t ms, const char *func) {
   if (ms) {
     SleepHandler::scheduleSleep(ms);
@@ -654,6 +686,14 @@ void PinoccioScout::scheduleSleep(uint32_t ms, const char *func) {
     free(postSleepFunction);
   postSleepFunction = func ? strdup(func) : NULL;
   sleepMs = ms;
+}
+
+void PinoccioScout::scheduleSleep2() {
+  // compute the amount of ms until meshtime reaches a second
+  uint32_t ms = (1000000 - SleepHandler::meshtime().us) / 1000;
+  SleepHandler::scheduleSleep(ms);
+  sleepPending = true;
+  automatedSleep = true;
 }
 
 void PinoccioScout::doSleep(bool pastEnd) {

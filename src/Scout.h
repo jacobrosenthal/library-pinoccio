@@ -74,8 +74,12 @@ class PinoccioScout : public PinoccioClass {
     void stopAnalogStateChangeEvents();
     void startPeripheralStateChangeEvents();
     void stopPeripheralStateChangeEvents();
+    void startScheduleSleepTimer();
+    void stopScheduleSleepTimer();
     void setStateChangeEventCycle(uint32_t digitalInterval, uint32_t analogInterval, uint32_t peripheralInterval);
     void saveState();
+    void setWakeMs(uint32_t wakePeriodMs);
+    uint32_t getWakeMs();
 
     int8_t getRegisterPinMode(uint8_t pin);
     int8_t getPinMode(uint8_t pin);
@@ -133,6 +137,9 @@ class PinoccioScout : public PinoccioClass {
     // copied, so it does not have to remain valid.
     void scheduleSleep(uint32_t ms, const char *cmd);
 
+    // sleep basd on global mesh time
+    void scheduleSleep2();
+
     enum {
       PINMODE_DISCONNECTED = -4,
       PINMODE_UNSET = -3,
@@ -156,8 +163,10 @@ class PinoccioScout : public PinoccioClass {
     SYS_Timer_t digitalStateChangeTimer;
     SYS_Timer_t analogStateChangeTimer;
     SYS_Timer_t peripheralStateChangeTimer;
+    SYS_Timer_t scheduleSleepTimer;
 
     bool sleepPending;
+    bool automatedSleep;
     // The original sleep time, used to pass to the callback and to
     // re-sleep. The actual sleep time for the next sleep is stored by
     // SleepHandler instead.
