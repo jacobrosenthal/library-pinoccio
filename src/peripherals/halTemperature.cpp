@@ -6,13 +6,16 @@
 *  This program is free software; you can redistribute it and/or modify it *
 *  under the terms of the BSD License as described in license.txt.         *
 \**************************************************************************/
-#ifndef _PINOCCIO_HAL_TEMPERATURE_H_
-#define _PINOCCIO_HAL_TEMPERATURE_H_
-
-#include <stdint.h>
-
-void HAL_TemperatureConfig();
-int16_t HAL_MeasureTemperature(void);
+#include <stdbool.h>
+#include "halTemperature.h"
+#include "SHT2x.h"
 
 
-#endif // _PINOCCIO_HAL_TEMPERATURE_H_
+void HAL_TemperatureConfig() {
+  uint8_t reg = SHT2x.readUserRegister();
+  SHT2x.writeUserRegister(reg || SHT2x_RES_11_11BIT);
+}
+
+int16_t HAL_MeasureTemperature(void) {
+  return SHT2x.readT() * 100;
+}

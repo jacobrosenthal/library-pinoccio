@@ -113,7 +113,8 @@ void PinoccioScout::setup(const char *sketchName, const char *sketchRevision, in
   Led.turnOff();
   Wire.begin();
   HAL_FuelGaugeConfig(20);   // Configure the MAX17048G's alert percentage to 20%
-
+  HAL_TemperatureConfig();
+  
   saveState();
   ModuleHandler::setup();
 
