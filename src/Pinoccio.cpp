@@ -84,11 +84,11 @@ const char* PinoccioClass::getLastResetCause() {
   }
 }
 
-int8_t PinoccioClass::getTemperature() {
+int16_t PinoccioClass::getTemperature() {
   if (isExternalAref == false) {
     return HAL_MeasureTemperature() + tempOffset;
   } else {
-    return -127;
+    return -32768;
   }
 }
 

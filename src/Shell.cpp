@@ -163,7 +163,7 @@ static StringBuffer tempReportHQ(void) {
           keyMap("c", 0),
           keyMap("f", 0),
           keyMap("offset", 0),
-          Scout.getTemperatureC(),
+          Scout.getTemperatureC()/100,
           Scout.getTemperatureF(),
           Scout.getTemperatureOffset());
   return Scout.handler.report(report);
@@ -175,7 +175,7 @@ static numvar temperatureReport(void) {
 }
 
 static numvar getTemperatureC(void) {
-  return Scout.getTemperatureC();
+  return Scout.getTemperatureC()/100;
 }
 
 static numvar getTemperatureF(void) {
@@ -194,7 +194,7 @@ static numvar temperatureCalibrate(void) {
   if (!checkArgs(1, F("usage: temperature.calibrate(value)"))) {
     return 0;
   }
-  Scout.setTemperatureOffset(getarg(1) - Scout.getTemperatureC() + Scout.getTemperatureOffset());
+  Scout.setTemperatureOffset(getarg(1) - Scout.getTemperatureC()/100 + Scout.getTemperatureOffset());
   return 1;
 }
 

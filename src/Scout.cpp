@@ -232,13 +232,13 @@ bool PinoccioScout::isBatteryConnected() {
   return true;
 }
 
-int8_t PinoccioScout::getTemperatureC() {
+int16_t PinoccioScout::getTemperatureC() {
   return this->getTemperature();
 }
 
 int8_t PinoccioScout::getTemperatureF() {
   float f;
-  f = round((1.8 * this->getTemperature()) + 32);
+  f = round((1.8 * this->getTemperature()/100) + 32);
   return (uint32_t)f;
 }
 
@@ -626,8 +626,9 @@ static void scoutPeripheralStateChangeTimerHandler(SYS_Timer_t *timer) {
   }
 
   if (Scout.temperatureEventHandler != 0) {
-    int8_t tempC = Scout.getTemperatureC();
-    if (Scout.temperature != tempC) {
+    int16_t tempC = Scout.getTemperatureC();
+    int16_t difference = Scout.temperature - tempC;
+    if (abs(difference) > 150) {
       Scout.temperature = tempC;
       int8_t tempF = Scout.getTemperatureF();
       if (Scout.eventVerboseOutput) {
@@ -637,7 +638,7 @@ static void scoutPeripheralStateChangeTimerHandler(SYS_Timer_t *timer) {
         Serial.print(tempF);
         Serial.println(F(")"));
       }
-      Scout.temperatureEventHandler(tempC, tempF);
+      Scout.temperatureEventHandler(tempC/100, tempF);
     }
   }
 }

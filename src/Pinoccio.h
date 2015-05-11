@@ -38,7 +38,7 @@ class PinoccioClass {
 
     void goToSleep(uint32_t sleepForMs);
 
-    int8_t getTemperature();
+    int16_t getTemperature();
     int8_t getTemperatureOffset(void);
     void setTemperatureOffset(int8_t offset);
     void enableExternalAref();

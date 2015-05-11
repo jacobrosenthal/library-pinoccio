@@ -57,7 +57,7 @@ class PinoccioScout : public PinoccioClass {
     bool isBatteryAlarmTriggered();
     bool isBatteryConnected();
     
-    int8_t getTemperatureC();
+    int16_t getTemperatureC();
     int8_t getTemperatureF();
 
     void enableBackpackVcc();
@@ -114,7 +114,7 @@ class PinoccioScout : public PinoccioClass {
     uint16_t batteryVoltage;
     bool isBattCharging;
     bool isBattAlarmTriggered;
-    uint8_t temperature;
+    int16_t temperature;
 
     CallbackList<void, bool> toggleBackpackVccCallbacks;
 

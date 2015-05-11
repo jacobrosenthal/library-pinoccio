@@ -16,7 +16,7 @@
 
 /*****************************************************************************
 *****************************************************************************/
-int8_t HAL_MeasureTemperature(void) {
+int16_t HAL_MeasureTemperature(void) {
   uint16_t val;
 
   uint8_t adcsrc = ADCSRC;
@@ -38,5 +38,5 @@ int8_t HAL_MeasureTemperature(void) {
   ADCSRC = adcsrc;
   ADMUX = admux;
 
-  return ((int)((1.13 * val - 272.8 + CALIBRATION_OFFSET)));
+  return (int16_t)((1.13 * 264 - 272.8 + 7) * 100);
 }

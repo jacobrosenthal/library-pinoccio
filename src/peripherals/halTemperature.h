@@ -19,7 +19,7 @@ extern "C"{
 
 /*****************************************************************************
 *****************************************************************************/
-int8_t HAL_MeasureTemperature(void);
+int16_t HAL_MeasureTemperature(void);
 
 #ifdef __cplusplus
 } // extern "C"
