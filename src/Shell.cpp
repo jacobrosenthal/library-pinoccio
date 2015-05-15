@@ -2732,7 +2732,9 @@ void PinoccioShell::loop() {
         esc_sequence = false;
       } else if (c == 0x03) {
         // Control-C (0x03) cancels sleep
+        // don't know which is running
         Scout.scheduleSleep(0, NULL);
+        Scout.cancelSleep2();
         Serial.println();
         prompt();
       } else {
