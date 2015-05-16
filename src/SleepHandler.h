@@ -59,11 +59,10 @@ class SleepHandler {
 
     // Returns the total time since startup
     static Duration uptime() {
-      // Atomically read the lastOverflow value
-      SCIRQM &= ~(1 << IRQMOF);
-      Duration last = lastOverflow;
-      SCIRQM |= (1 << IRQMOF);
-      return last + (uint64_t)read_sccnt() * US_PER_TICK;
+      Duration uptime;
+      uptime.us = micros() % 1000000;
+      uptime.seconds = millis() / 1000;
+      return uptime;
     }
 
     // Returns the time slept since startup
@@ -83,8 +82,6 @@ class SleepHandler {
     // The mesh offset
     static int32_t meshOffset;
 
-    // The time from startup to the most recent overflow
-    static Duration lastOverflow;
     // The total time spent sleeping since startup
     static Duration totalSleep;
 
