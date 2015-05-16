@@ -449,6 +449,11 @@ static numvar powerSleep(void) {
   return 1;
 }
 
+static numvar powerWakeup(void) {
+  Scout.scheduleSleep(0, NULL);
+  return 1;
+}
+
 static StringBuffer powerReportHQ(void) {
   StringBuffer report(100);
   report.appendSprintf("[%d,[%d,%d,%d,%d],[%d,%d,%s,%s]]",
@@ -2448,6 +2453,7 @@ void PinoccioShell::setup() {
   addFunction("power.disablevcc", disableBackpackVcc);
   addFunction("power.isvccenabled", isBackpackVccEnabled);
   addFunction("power.sleep", powerSleep);
+  addFunction("power.wakeup", powerWakeup);
   addFunction("power.report", powerReport);
   addFunction("power.wakeup.pin", powerWakeupPin);
   addFunction("power.startglobalsleep", powerStartGlobalSleep);
@@ -2786,6 +2792,13 @@ void PinoccioShell::loop() {
           Serial.print(serialIncoming);
         }
         esc_sequence = false;
+      } else if (c == 0x03) {
+        // Control-C (0x03) cancels sleep
+        // don't know which is running
+        Scout.scheduleSleep(0, NULL);
+        Scout.cancelSleep2();
+        Serial.println();
+        prompt();
       } else {
         Serial.write(c); // echo everything back
         serialIncoming += c;
