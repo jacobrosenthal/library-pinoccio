@@ -9,8 +9,8 @@ ISR(SCNT_OVFL_vect);
 class SleepHandler {
   public:
 
-    static void setOffset(int32_t d);
-    static int32_t getOffset();
+    static void setOffset(int64_t d);
+    static int64_t getOffset();
 
     static void setup();
 
@@ -75,12 +75,12 @@ class SleepHandler {
       return uptime() - totalSleep;
     }
 
-    static Duration meshtime();
+    static int32_t meshmicros();
 
   protected:
 
     // The mesh offset
-    static int32_t meshOffset;
+    static int64_t meshOffset;
 
     // The total time spent sleeping since startup
     static Duration totalSleep;
