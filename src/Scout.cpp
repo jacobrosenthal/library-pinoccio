@@ -416,6 +416,7 @@ void PinoccioScout::startTimerA(uint32_t ms, const char *func, bool continuous) 
   if(timerAFunction){
     free(timerAFunction);
   }
+  timerAFunction = func ? strdup(func) : NULL;
 
   SYS_TimerStart(&timerA);
 }
