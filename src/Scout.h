@@ -69,6 +69,9 @@ class PinoccioScout : public PinoccioClass {
     bool factoryReset();
     void reboot();
 
+    void startTimerA(uint32_t ms, const char *func, bool continuous);
+    void stopTimerA();
+
     void startDigitalStateChangeEvents();
     void stopDigitalStateChangeEvents();
     void startAnalogStateChangeEvents();
@@ -161,6 +164,9 @@ class PinoccioScout : public PinoccioClass {
       PINMODE_INPUT_PULLUP = 2,
       PINMODE_PWM = 3,
     };
+
+    char * timerAFunction;
+
   protected:
     uint32_t lastIndicate = 0;
 
@@ -175,6 +181,8 @@ class PinoccioScout : public PinoccioClass {
     SYS_Timer_t peripheralStateChangeTimer;
     SYS_Timer_t scheduleSleepTimer;
     SYS_Timer_t wakeTimer;
+
+    SYS_Timer_t timerA;
 
     bool sleepPending;
     bool automatedSleep;
