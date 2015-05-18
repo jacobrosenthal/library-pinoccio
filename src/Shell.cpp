@@ -549,7 +549,7 @@ static numvar powerStopGloballeep(void) {
 \****************************/
 
 static numvar startTimerA(void) {
-  if (!checkArgs(2, 3, F("usage: timera.start(ms, \"function\", [periodic])"))) {
+  if (!checkArgs(2, 3, F("usage: timer.starta(ms, \"function\", [continuous])"))) {
     return 0;
   }
 
@@ -559,7 +559,7 @@ static numvar startTimerA(void) {
   else
     func = keyGet(getarg(2));
   
-  bool periodic = getarg(0) == 3 ? getarg(3) : 1;
+  bool periodic = getarg(0) == 3 ? getarg(3) : 0;
 
   if (func && !Shell.defined(func)) {
     sp("Must be the name of function: ");

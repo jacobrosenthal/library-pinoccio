@@ -429,7 +429,7 @@ static void timerAHandler(SYS_Timer_t *timer) {
   if(Scout.timerAFunction){
     Shell.eval(Scout.timerAFunction);
 
-    if(SYS_TIMER_PERIODIC_MODE == timer->mode){
+    if(SYS_TIMER_INTERVAL_MODE == timer->mode){
       free(Scout.timerAFunction);
     }
   }
