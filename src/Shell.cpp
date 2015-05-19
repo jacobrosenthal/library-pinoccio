@@ -1237,7 +1237,7 @@ static numvar commandReport(void) {
           keyMap("custom", 0),
           (char*)getstringarg(1),
           json.c_str());
-  speol(Scout.handler.report(lastReport));
+  Scout.handler.report(lastReport);
   return true;
 }
 
@@ -2204,7 +2204,7 @@ static numvar hqReport(void) {
           name,
           args);
   free(args);
-  speol(Scout.handler.report(lastReport));
+  Scout.handler.report(lastReport);
   return true;
 }
 
