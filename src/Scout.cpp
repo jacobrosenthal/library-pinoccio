@@ -404,6 +404,8 @@ void PinoccioScout::stopWakeTimer() {
 }
 
 void PinoccioScout::startTimerA(uint32_t ms, const char *func, bool continuous) {
+  stopTimerA();
+
   timerA.interval = ms;
   timerA.handler = timerAHandler;
 
@@ -415,6 +417,7 @@ void PinoccioScout::startTimerA(uint32_t ms, const char *func, bool continuous) 
 
   if(timerAFunction){
     free(timerAFunction);
+    timerAFunction = NULL;
   }
   timerAFunction = func ? strdup(func) : NULL;
 
@@ -422,16 +425,24 @@ void PinoccioScout::startTimerA(uint32_t ms, const char *func, bool continuous) 
 }
 
 void PinoccioScout::stopTimerA() {
-  free(timerAFunction);
-  SYS_TimerStop(&timerA);
+  if(SYS_TimerStarted(&timerA)){
+    SYS_TimerStop(&timerA);  
+  }
+
+  if(timerAFunction){
+    free(timerAFunction);
+    timerAFunction = NULL;
+  }
 }
 
 static void timerAHandler(SYS_Timer_t *timer) {
   if(Scout.timerAFunction){
+
     Shell.eval(Scout.timerAFunction);
 
-    if(SYS_TIMER_INTERVAL_MODE == timer->mode){
+    if(SYS_TIMER_PERIODIC_MODE != timer->mode){
       free(Scout.timerAFunction);
+      Scout.timerAFunction = NULL;
     }
   }
 }
