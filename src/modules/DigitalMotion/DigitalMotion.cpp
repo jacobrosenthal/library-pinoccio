@@ -153,8 +153,6 @@ void DigitalMotionModule::read() {
     }
     SYS_TimerStart(&timeoutTimer);
   }
-
-  Serial.println(reading);
 }
 
 bool DigitalMotionModule::getStatus() {
