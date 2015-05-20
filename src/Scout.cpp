@@ -285,6 +285,10 @@ void PinoccioScout::loop() {
   }
 }
 
+bool PinoccioScout::isSleeping() {
+  return automatedSleep;
+}
+
 bool PinoccioScout::isBatteryCharging() {
   return (digitalRead(CHG_STATUS) == LOW);
 }
