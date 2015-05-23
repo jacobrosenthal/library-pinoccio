@@ -13,19 +13,28 @@ const __FlashStringHelper *SHTModule::name() const {
 }
 
 static numvar shtTemperatureC(void) {
-  return SHT2x.readT();
+  SHTModule* m = &(SHTModule::instance);
+  return (uint32_t)m->getC();
 }
 
 static numvar shtTemperatureF(void) {
-  float f;
-  f = round((1.8 * SHT2x.readT()) + 32);
-  return (uint32_t)f;
+  SHTModule* m = &(SHTModule::instance);
+  return (uint32_t)m->getF();
+}
+
+static numvar shtTemperatureLastC(void) {
+  SHTModule* m = &(SHTModule::instance);
+  return (uint32_t)m->getLastC();
+}
+
+static numvar shtTemperatureLastF(void) {
+  SHTModule* m = &(SHTModule::instance);
+  return (uint32_t)m->getLastF();
 }
 
 static numvar shtHumidity(void) {
   return SHT2x.readRH();
 }
-
 
 bool SHTModule::enable() {
   
@@ -34,12 +43,32 @@ bool SHTModule::enable() {
   SHT2x.writeUserRegister(reg || SHT2x_RES_11_11BIT);
 
   Shell.addFunction("sht.humidity", shtHumidity);
+
   Shell.addFunction("sht.temperature.c", shtTemperatureC);
   Shell.addFunction("sht.temperature.f", shtTemperatureF);
+
+  Shell.addFunction("sht.temperature.lastc", shtTemperatureC);
+  Shell.addFunction("sht.temperature.lastf", shtTemperatureC);
 
 }
 
 void SHTModule::loop() {
+}
 
+float SHTModule::getC() {
+  lastC = SHT2x.readT();
+  return lastC;
+}
 
+float SHTModule::getF() {
+  lastC = SHT2x.readT();
+  return round((1.8 * lastC) + 32);
+}
+
+float SHTModule::getLastC() {
+  return lastC;
+}
+
+float SHTModule::getLastF() {
+  return round((1.8 * lastC) + 32);
 }
