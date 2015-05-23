@@ -13,8 +13,13 @@ namespace pinoccio {
       void loop();
       static SHTModule instance;
 
+      float getC();
+      float getF();
+      float getLastC();
+      float getLastF();
+
     protected:
-    
+      float lastC;
 
     private:
       using Module::Module;
