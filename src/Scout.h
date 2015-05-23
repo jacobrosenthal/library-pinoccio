@@ -25,6 +25,8 @@
 #include "peripherals/halRgbLed.h"
 #include "util/radio_state_t.h"
 
+ISR(SCNT_CMP2_vect);
+
 // This is a temporary hack to check the result of snprintf and print an
 // error
 /*
@@ -46,6 +48,13 @@ using pinoccio::CallbackList;
 class PinoccioScout : public PinoccioClass {
 
   public:
+
+    static const uint8_t US_PER_TICK = (1000000/62500);
+
+    static uint32_t usToTicks(uint32_t us) {
+      return us / US_PER_TICK;
+    }
+
     PinoccioScout();
     ~PinoccioScout();
 
@@ -143,7 +152,7 @@ class PinoccioScout : public PinoccioClass {
     // command is executed after the sleep. A previous sleep can be
     // canceled by passing 0, NULL. The command passed in will be
     // copied, so it does not have to remain valid.
-    void scheduleSleep(uint32_t ms, const char *cmd);
+    void scheduleSleep(uint32_t us, const char *cmd);
 
     // sleep basd on global mesh time
     void scheduleSleep2(const char *cmd);
@@ -154,7 +163,7 @@ class PinoccioScout : public PinoccioClass {
 
     //should probably be protected
     void internalScheduleSleep();
-    radio_state_t radioState;
+    volatile radio_state_t radioState;
 
     enum {
       PINMODE_DISCONNECTED = -4,
@@ -170,6 +179,13 @@ class PinoccioScout : public PinoccioClass {
     char * timerAFunction;
 
   protected:
+
+    void scheduleWake(uint32_t us);
+    void write_scocr2(uint32_t val);
+
+
+    friend void SCNT_CMP2_vect();
+
     uint32_t lastIndicate = 0;
 
     void doSleep();
@@ -191,7 +207,7 @@ class PinoccioScout : public PinoccioClass {
     // The original sleep time, used to pass to the callback and to
     // re-sleep. The actual sleep time for the next sleep is stored by
     // SleepHandler instead.
-    uint32_t sleepMs;
+    uint32_t sleepUs;
     char * postSleepFunction;
 };
 

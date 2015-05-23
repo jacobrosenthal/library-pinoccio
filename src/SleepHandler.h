@@ -11,7 +11,8 @@ class SleepHandler {
 
     static void setOffset(uint64_t d);
     static uint64_t getOffset();
-
+    static uint32_t getLastSync();
+    
     static void setup();
 
     // Schedule a sleep until the given number of ms from now. The sleep
@@ -21,7 +22,7 @@ class SleepHandler {
     //
     // ms can not be 0, or more than 2^32 * 16 / 1000 ms (±19 hours), due to
     // the limited range of the counter used.
-    static void scheduleSleep(uint32_t ms);
+    static void scheduleSleep(uint32_t us);
 
     // How many ticks are left before the end time is reached?
     static uint32_t scheduledTicksLeft();
@@ -77,10 +78,13 @@ class SleepHandler {
 
     static uint32_t meshmicros();
 
+    static uint32_t read_sccnt();
+
   protected:
 
     // The mesh offset
     static uint64_t meshOffset;
+    static uint32_t lastSync;
 
     // The total time spent sleeping since startup
     static Duration totalSleep;
@@ -92,7 +96,6 @@ class SleepHandler {
     friend void SCNT_OVFL_vect();
 
     static void sleepUntilMatch();
-    static uint32_t read_sccnt();
     static void write_scocr3(uint32_t val);
     static uint32_t read_scocr3();
 

@@ -33,6 +33,7 @@ static int fieldAnswerTo = 0;
 static char *fieldAnswerChunks;
 static int fieldAnswerChunksAt;
 static int fieldAnswerRetries;
+static int timeSyncRetries;
 static NWK_DataReq_t fieldAnswerReq;
 
 StringBuffer fieldCommandOutput;
@@ -154,7 +155,7 @@ void ScoutHandler::setVerbose(bool flag) {
 static bool fieldCommands(NWK_DataInd_t *ind) {
   numvar ret;
   if (Scout.handler.isVerbose) {
-    Serial.print(F("Received command"));
+    Serial.print(F("Received command "));
     Serial.print(F("lqi: "));
     Serial.print(ind->lqi);
     Serial.print(F("  "));
@@ -346,20 +347,27 @@ static uint8_t timesync[TIME_SYNC_SIZE];
 static bool timeSyncInProgress = false;
 static NWK_DataReq_t timeSyncReq;
 
-void ScoutHandler::timeSyncSend() {
+void ScoutHandler::timeSyncSend(uint8_t address) {
   if(timeSyncInProgress) return;
 
+  timeSyncRetries = 0;
   uint32_t now = micros();
+
+    // If commanding a Scout, change operation type
+  if (address) {
+    timeSyncReq.options = NWK_OPT_ACK_REQUEST|NWK_OPT_ENABLE_SECURITY;
+  } else {
+    timeSyncReq.options = NWK_OPT_MULTICAST|NWK_OPT_ENABLE_SECURITY;
+  }
 
   timesync[0] = (now >> 24) & 0xFF;
   timesync[1] = (now >> 16) & 0xFF;
   timesync[2] = (now >> 8) & 0xFF;
   timesync[3] = now & 0xFF;
   timeSyncInProgress = true;
-  timeSyncReq.dstAddr = 5; //group for multicast
-  timeSyncReq.dstEndpoint = 5; //??
+  timeSyncReq.dstAddr = address ? address : 5; //group for multicast
+  timeSyncReq.dstEndpoint = address ? address : 5; //??
   timeSyncReq.srcEndpoint = Scout.getAddress();
-  timeSyncReq.options = NWK_OPT_MULTICAST|NWK_OPT_ENABLE_SECURITY;
   timeSyncReq.data = (uint8_t*)timesync;
   timeSyncReq.size = TIME_SYNC_SIZE;
   timeSyncReq.confirm = timeSyncConfirm;
@@ -402,14 +410,14 @@ static bool fieldTimeSync(NWK_DataInd_t *ind) {
 
   uint64_t offset;
   if(them >= now){
-    offset = (uint64_t)(them - now);
+    offset = (uint64_t)((them - now) + 93418);
   }else{
-    offset = (uint64_t)((4294967296 + them) - now);
+    offset = (uint64_t)((4294967296 + them) - now + 93418);
   }
 
   // should I keep this number behind the scenes to not confuse?
   // should it be user updatable?
-  SleepHandler::setOffset(offset + 109923);
+  SleepHandler::setOffset(offset);
 
   if (Shell.defined("on.mesh.sync")) Shell.eval(F("on.mesh.sync"));
 
@@ -431,9 +439,29 @@ static bool fieldTimeSync(NWK_DataInd_t *ind) {
 }
 
 static void timeSyncConfirm(NWK_DataReq_t *req) {
-  if (req->status != NWK_SUCCESS_STATUS && Scout.handler.isVerbose) {
-    Serial.print(F("Time Sync announce failed: "));
-    Serial.println(req->status);
+
+  if (Scout.handler.isVerbose) {
+    Serial.print(F("  Timesync confirmation - "));
+  }
+  if (req->status == NWK_SUCCESS_STATUS) {
+    if (Scout.handler.isVerbose) {
+      Serial.println(F("success"));
+    }
+  } else {
+    timeSyncRetries++;
+    if (timeSyncRetries > 3) {
+      if (Scout.handler.isVerbose) {
+        Serial.print(F("error: "));
+        Serial.println(req->status);
+      }
+      // leadCommandError(leadCommandTo, leadAnswerID, "no response");
+    } else {
+      if (Scout.handler.isVerbose) {
+        Serial.println(F("RETRY"));
+      }
+      NWK_DataReq(req);
+      return; // don't free yet
+    }
   }
   timeSyncInProgress = false;
 }
@@ -448,11 +476,13 @@ static bool fieldAnnouncements(NWK_DataInd_t *ind) {
   if (Scout.handler.isVerbose) {
     Serial.print(F("multicast in "));
     Serial.println(ind->dstAddr);
+    Serial.println(data);
   }
   if (Scout.isLeadScout()) {
     leadAnnouncementSend(ind->dstAddr, ind->srcAddr, ConstBuf(data, ind->size-1)); // no null
   }
-  if (!ind->dstAddr || ind->dstAddr == 0xBEEF || strlen(data) < 3 || data[0] != '[') {
+
+  if (!ind->dstAddr || strlen(data) < 3 || data[0] != '[') {
     return false;
   }
 

@@ -23,7 +23,7 @@ namespace pinoccio {
       void setup();
       void loop();
       void announce(uint16_t group, const String& message);
-      void timeSyncSend();
+      void timeSyncSend(uint8_t address);
       bool isVerbose;
       void setVerbose(bool flag);
       StringBuffer report(StringBuffer& report);

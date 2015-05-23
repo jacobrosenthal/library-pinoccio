@@ -14,6 +14,7 @@
 #include <math.h>
 #include <avr/eeprom.h>
 #include <avr/pgmspace.h>
+#include <util/atomic.h>
 
 using namespace pinoccio;
 
@@ -24,6 +25,39 @@ static void scheduleSleepTimerHandler(SYS_Timer_t *timer);
 static void wakeTimerHandler(SYS_Timer_t *timer);
 
 static void timerAHandler(SYS_Timer_t *timer);
+
+
+ISR(SCNT_CMP2_vect) {
+  Scout.radioState = PIN_SHOULD_WAKE;
+}
+
+void PinoccioScout::scheduleWake(uint32_t us) {
+  uint32_t ticks = usToTicks(us);
+  // Make sure we cannot "miss" the compare match if a low timeout is
+  // passed (really only ms = 0, which is forbidden, but handle it
+  // anyway).
+  if (ticks < 2) ticks = 2;
+  // Disable interrupts to prevent the counter passing the target before
+  // we clear the IRQSCP3 flag (due to other interrupts happening)
+  ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+    // Schedule SCNT_CMP2 when the given counter is reached
+    write_scocr2(SleepHandler::read_sccnt() + ticks);
+
+    // Clear any previously pending interrupt
+    SCIRQS = (1 << IRQSCP2);
+
+    // Enable the SCNT_CMP2 interrupt to wake us from sleep
+    SCIRQM |= (1 << IRQMCP2);
+  }
+}
+
+void PinoccioScout::write_scocr2(uint32_t val) {
+  // Write LL last, that will update the entire register atomically
+  SCOCR2HH = val >> 24;
+  SCOCR2HL = val >> 16;
+  SCOCR2LH = val >> 8;
+  SCOCR2LL = val;
+}
 
 #ifndef lengthof
 #define lengthof(x) (sizeof(x)/sizeof(*x))
@@ -233,6 +267,10 @@ void PinoccioScout::loop() {
       radioState = PIN_AWAKE;
 
       if (isLeadScout()) {
+
+        // Disable the SCNT_CMP2 interrupt again
+        SCIRQM &= ~(1 << IRQMCP2);
+
         Scout.wakeRadio();
       }
 
@@ -249,7 +287,7 @@ void PinoccioScout::loop() {
         StringBuffer cmd(64, 16);
         cmd += func;
         cmd += "(";
-        cmd.appendSprintf("%lu", sleepMs);
+        cmd.appendSprintf("%lu", sleepUs);
         cmd.appendSprintf(",%lu", left);
         cmd += ")";
 
@@ -272,10 +310,6 @@ void PinoccioScout::loop() {
       // doesnt have to be exact, only our wake time does
       if (automatedSleep) {
         startScheduleSleepTimer();
-      }
-
-      if (eventVerboseOutput) {
-        Serial.println(SleepHandler::meshmicros());
       }
 
       break;
@@ -797,24 +831,25 @@ void PinoccioScout::internalScheduleSleep() {
   // set a timer to wake us up
   // compute the amount of ms until meshtime reaches a second
   uint32_t us = (1000000 - (SleepHandler::meshmicros() % 1000000));
-  uint32_t ms = us / 1000;
+  // uint32_t ms = us / 1000;
 
-  // whats the right number here?
-  if(ms < 10){
-    return;
-  }
+  // // whats the right number here?
+  // if(ms < 10){
+  //   return;
+  // }
 
   // sleep next time through loop and are able to
   radioState = PIN_SHOULD_SLEEP;
 
   // if lead scout schedule using systimer
   if (isLeadScout()) {
-    wakeTimer.interval = ms;
-    startWakeTimer();
+    scheduleWake(us);
+    // wakeTimer.interval = ms;
+    // startWakeTimer();
 
   // otherwise schedule using symbol counter
   } else {
-    SleepHandler::scheduleSleep(ms);
+    SleepHandler::scheduleSleep(us);
   }
 }
 
@@ -837,9 +872,9 @@ uint32_t PinoccioScout::getWakeMs() {
 }
 
 // TODO make sure not in an automated sleep cycle or exit cleanty from it
-void PinoccioScout::scheduleSleep(uint32_t ms, const char *func) {
-  if (ms) {
-    SleepHandler::scheduleSleep(ms);
+void PinoccioScout::scheduleSleep(uint32_t us, const char *func) {
+  if (us) {
+    SleepHandler::scheduleSleep(us);
     radioState = PIN_SHOULD_SLEEP;
   } else {
     radioState = PIN_SHOULD_WAKE;
@@ -848,7 +883,7 @@ void PinoccioScout::scheduleSleep(uint32_t ms, const char *func) {
   if (postSleepFunction)
     free(postSleepFunction);
   postSleepFunction = func ? strdup(func) : NULL;
-  sleepMs = ms;
+  sleepUs = us;
 }
 
 // set automated sleep/wake cycle based on mesh time

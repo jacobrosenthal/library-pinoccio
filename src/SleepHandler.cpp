@@ -7,6 +7,12 @@ static volatile bool timer_match;
 
 Duration SleepHandler::totalSleep = {0, 0};
 uint64_t SleepHandler::meshOffset = 0;
+uint32_t SleepHandler::lastSync = 0;
+
+
+uint32_t SleepHandler::getLastSync(){
+  return lastSync;
+}
 
 uint64_t SleepHandler::getOffset(){
   return meshOffset;
@@ -14,6 +20,7 @@ uint64_t SleepHandler::getOffset(){
 
 void SleepHandler::setOffset(uint64_t d){
   meshOffset = d;
+  lastSync = millis();
 }
 
 uint32_t SleepHandler::meshmicros(){
@@ -101,8 +108,8 @@ void SleepHandler::sleepUntilMatch() {
   }
 }
 
-void SleepHandler::scheduleSleep(uint32_t ms) {
-  uint32_t ticks = msToTicks(ms);
+void SleepHandler::scheduleSleep(uint32_t us) {
+  uint32_t ticks = usToTicks(us);
   // Make sure we cannot "miss" the compare match if a low timeout is
   // passed (really only ms = 0, which is forbidden, but handle it
   // anyway).

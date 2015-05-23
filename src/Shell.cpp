@@ -315,6 +315,10 @@ static numvar uptimeMeshOffset(void) {
   return SleepHandler::getOffset();
 }
 
+static numvar uptimeGetLastSync(void) {
+  return SleepHandler::getLastSync();
+}
+
 static numvar powerGetWakeMs(void) {
   return Scout.getWakeMs();
 }
@@ -1251,7 +1255,16 @@ static numvar meshEach(void) {
 }
 
 static numvar meshSync(void) {
-  Scout.handler.timeSyncSend();
+  if (!checkArgs(0, 1, F("usage: mesh.sync([scoutId])"))) {
+    return 0;
+  }
+
+  int8_t address = 0; 
+  if (getarg(0) >= 1) {
+    address = getarg(1);
+  }
+
+  Scout.handler.timeSyncSend(address);
   return 1;
 }
 
@@ -2564,6 +2577,7 @@ void PinoccioShell::setup() {
   addFunction("uptime.status", uptimeStatus);
   addFunction("uptime", uptimeStatus);
   addFunction("uptime.setoffset", uptimeSetOffset);
+  addFunction("uptime.lastsync", uptimeGetLastSync);
 
   addFunction("uptime.meshoffset", uptimeMeshOffset);
   addFunction("uptime.meshtime", uptimeGetMeshtime);
