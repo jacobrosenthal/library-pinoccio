@@ -57,15 +57,15 @@ void HAL_FuelGaugeClearAlert() {
 unsigned int HAL_FuelGaugei2cRead16(unsigned char address) {
   int data = 0;
 
-  Wire.beginTransmission(MAX17048G_ADDRESS);
-  Wire.write(address);
-  Wire.endTransmission();
+  // Wire.beginTransmission(MAX17048G_ADDRESS);
+  // Wire.write(address);
+  // Wire.endTransmission();
 
-  Wire.requestFrom(MAX17048G_ADDRESS, 2);
-  while (Wire.available() < 2)
-    ;
-  data = ((int) Wire.read()) << 8;
-  data |= Wire.read();
+  // Wire.requestFrom(MAX17048G_ADDRESS, 2);
+  // while (Wire.available() < 2)
+  //   ;
+  // data = ((int) Wire.read()) << 8;
+  // data |= Wire.read();
 
   return data;
 }
